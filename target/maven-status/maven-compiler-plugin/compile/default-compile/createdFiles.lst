@@ -1,4 +1,0 @@
-com\citiustech\restserver\model\Patient.class
-com\citiustech\restserver\routebuilder\PatientCrudGetbyId.class
-com\citiustech\restserver\processors\BasicAuthProcessor.class
-com\citiustech\outbound\file\to\xslate\FiletoXslateRoute.class
