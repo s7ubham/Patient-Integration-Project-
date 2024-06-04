@@ -10,6 +10,9 @@ public class OutboundRouter extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 		
+		onException(Exception.class)
+		.log("Exception Occured");
+		
 		from("activemq:queue:Outbound")
 		.unmarshal().json(JsonLibrary.Jackson,LinkedHashMap.class)
 		.log("Data received after Xslate: ${body} ")

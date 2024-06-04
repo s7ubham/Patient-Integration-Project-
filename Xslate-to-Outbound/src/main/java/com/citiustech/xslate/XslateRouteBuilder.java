@@ -17,6 +17,9 @@ public class XslateRouteBuilder extends RouteBuilder {
 
 	@Override
 	public void configure() throws Exception {
+		
+		onException(Exception.class)
+		.log("Exception Occured");
 
 		from("activemq:queue:patient-xslate")
 		.log("Data Recieved From Inbound: ${body}")

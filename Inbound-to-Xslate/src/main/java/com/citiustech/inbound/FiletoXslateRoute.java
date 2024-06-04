@@ -6,7 +6,6 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 
 public class FiletoXslateRoute extends RouteBuilder {
-	public String wtf= "http://localhost:8080/PatientData/1";
 
 	@Override
 	public void configure() throws Exception {
@@ -22,7 +21,6 @@ public class FiletoXslateRoute extends RouteBuilder {
 		.removeHeaders("*")
 		.setHeader(Exchange.HTTP_METHOD,simple("GET"))
 		.setHeader(Exchange.HTTP_URI,simple("http://localhost:8080/PatientData/${body}"))
-		.log("${body}")
 		.to("http://localhost:8080/PatientData/${body}")
 		.to("activemq:queue:patient-xslate");
 
