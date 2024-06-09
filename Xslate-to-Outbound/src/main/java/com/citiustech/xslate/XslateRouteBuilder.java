@@ -1,7 +1,17 @@
 package com.citiustech.xslate;
 
+import org.apache.activemq.ConnectionFailedException;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
+
+import com.citiustech.models.DiagnosisDetails;
+import com.citiustech.models.EquipmentDetails;
+import com.citiustech.models.NurseDetails;
+import com.citiustech.models.Patient;
+import com.citiustech.models.PatientDemographicDetails;
+import com.citiustech.models.PatientTreatmentDetails;
+import com.citiustech.models.TransformedPatient;
 
 public class XslateRouteBuilder extends RouteBuilder {
 	
@@ -18,15 +28,79 @@ public class XslateRouteBuilder extends RouteBuilder {
 	@Override
 	public void configure() throws Exception {
 		
+		onException(ConnectionFailedException.class)
+		.handled(true)
+		.log("ActiveMQ Connection Failed : ${exception.message}")
+		.maximumRedeliveries(3)
+		.maximumRedeliveryDelay("1000")
+		.retryAttemptedLogLevel(LoggingLevel.ERROR);
+		
+		//Default Error Handler
 		onException(Exception.class)
-		.log("Exception Occured");
+		.handled(true)
+		.log("Exception occurred: ${exception.message}");			
 
 		from("activemq:queue:patient-xslate")
-		.log("Data Recieved From Inbound: ${body}")
-		.unmarshal().json(JsonLibrary.Jackson)
-		.setBody(simple(getXslateJsonStructure()))
+		.unmarshal().json(JsonLibrary.Jackson,Patient.class)
+		.log("${body}")
+		.process(e->{
+			Patient patient = e.getIn().getBody(Patient.class);
+			System.out.println(patient);
+			
+			// Create an instance of PatientData
+			TransformedPatient patientData = new TransformedPatient();
+
+			// Create an instance of PatientDemographic and set its properties
+			PatientDemographicDetails patientDemographic = new PatientDemographicDetails();
+			patientDemographic.setPatientId(patient.getPatientId());
+			patientDemographic.setPatientFirstName(patient.getPatientFirstName());
+			patientDemographic.setPatientLastName(patient.getPatientLastName());
+			patientDemographic.setPatientAge(patient.getPatientAge());
+			patientDemographic.setPatientGender(patient.getPatientGender());
+
+			// Create an instance of PatientTreatmentDetails and its nested classes, and set their properties
+			PatientTreatmentDetails patientTreatmentDetails = new PatientTreatmentDetails();
+
+			DiagnosisDetails diagnosisDetails = new DiagnosisDetails();
+			diagnosisDetails.setDiagnosisDisease(patient.getDiagnosisDisease());
+			diagnosisDetails.setDiagnosisSymptoms(patient.getDiagnosisSymptoms());
+			diagnosisDetails.setDiagnosisMedication(patient.getDiagnosisMedication());
+			diagnosisDetails.setPatientStatus(patient.getPatientStatus());
+
+			EquipmentDetails equipmentDetails = new EquipmentDetails();
+			equipmentDetails.setEquipmentStatus(patient.getEquipmentStatus());
+			equipmentDetails.setEquipmentName(patient.getEquipmentName());
+
+			NurseDetails nurseDetails = new NurseDetails();
+			nurseDetails.setNurseId(patient.getNurseId());
+			nurseDetails.setNurseName(patient.getNurseName());
+
+			// Set the nested classes in PatientTreatmentDetails
+			patientTreatmentDetails.setDiagnosisDetails(diagnosisDetails);
+			patientTreatmentDetails.setEquipmentDetails(equipmentDetails);
+			patientTreatmentDetails.setNurseDetails(nurseDetails);
+
+			// Set the created instances in PatientData
+			patientData.setPatientDemographicDetails(patientDemographic);
+			patientData.setPatientTreatmentDetails(patientTreatmentDetails);
+			e.getIn().setBody(patientData);
+			System.out.println(patientData);
+			
+		})
+		.marshal().json(JsonLibrary.Jackson)
 		.to("activemq:queue:Outbound")
 		.log("Data Sent to Outbound Queue");
+		
+		
+		
+		
+//		Method 3
+//		from("activemq:queue:patient-xslate")
+//		.log("Data Recieved From Inbound: ${body}")
+//		.unmarshal().json(JsonLibrary.Jackson)
+//		.setBody(simple(getXslateJsonStructure()))
+//		.to("activemq:queue:Outbound")
+//		.log("Data Sent to Outbound Queue");
 
 		
 		//Method-1
