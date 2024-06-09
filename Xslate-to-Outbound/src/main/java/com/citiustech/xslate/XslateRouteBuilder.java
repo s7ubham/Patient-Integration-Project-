@@ -47,10 +47,8 @@ public class XslateRouteBuilder extends RouteBuilder {
 			Patient patient = e.getIn().getBody(Patient.class);
 			System.out.println(patient);
 			
-			// Create an instance of PatientData
 			TransformedPatient patientData = new TransformedPatient();
 
-			// Create an instance of PatientDemographic and set its properties
 			PatientDemographicDetails patientDemographic = new PatientDemographicDetails();
 			patientDemographic.setPatientId(patient.getPatientId());
 			patientDemographic.setPatientFirstName(patient.getPatientFirstName());
@@ -58,7 +56,6 @@ public class XslateRouteBuilder extends RouteBuilder {
 			patientDemographic.setPatientAge(patient.getPatientAge());
 			patientDemographic.setPatientGender(patient.getPatientGender());
 
-			// Create an instance of PatientTreatmentDetails and its nested classes, and set their properties
 			PatientTreatmentDetails patientTreatmentDetails = new PatientTreatmentDetails();
 
 			DiagnosisDetails diagnosisDetails = new DiagnosisDetails();
@@ -75,12 +72,10 @@ public class XslateRouteBuilder extends RouteBuilder {
 			nurseDetails.setNurseId(patient.getNurseId());
 			nurseDetails.setNurseName(patient.getNurseName());
 
-			// Set the nested classes in PatientTreatmentDetails
 			patientTreatmentDetails.setDiagnosisDetails(diagnosisDetails);
 			patientTreatmentDetails.setEquipmentDetails(equipmentDetails);
 			patientTreatmentDetails.setNurseDetails(nurseDetails);
 
-			// Set the created instances in PatientData
 			patientData.setPatientDemographicDetails(patientDemographic);
 			patientData.setPatientTreatmentDetails(patientTreatmentDetails);
 			e.getIn().setBody(patientData);
@@ -90,10 +85,7 @@ public class XslateRouteBuilder extends RouteBuilder {
 		.marshal().json(JsonLibrary.Jackson)
 		.to("activemq:queue:Outbound")
 		.log("Data Sent to Outbound Queue");
-		
-		
-		
-		
+
 //		Method 3
 //		from("activemq:queue:patient-xslate")
 //		.log("Data Recieved From Inbound: ${body}")
@@ -152,5 +144,4 @@ public class XslateRouteBuilder extends RouteBuilder {
 //			.log("${body}")
 //			.to("activemq:queue:outbound");
 	}
-
 }
